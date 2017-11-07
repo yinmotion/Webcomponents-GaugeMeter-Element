@@ -1,0 +1,145 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="./tweenlite-import.html">
+
+<dom-module id="gaugemeter-element">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"
+    viewBox='0 0 300 300' preserveAspectRatio="xMidYMid" style="width:300px; height:300px">
+      <circle id="base" cx = "130" cy = "130" r = "110" fill="none" stroke="#EEE"  stroke-width="5"/>
+      <path id="arc" d="M130,130 " fill="none" stroke="red" stroke-linecap="round" stroke-width="5" />
+      <circle id="dot" cx = "0" cy = "0" r = "10" fill="crimson" stroke="none"/>
+    </svg>
+  </template>
+  <script>
+    /**
+     * `gaugemeter-element`
+     * SVG Gauge meter component
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    //"0 0 300 300" 
+    const className = "GaugemeterElement";
+    var myTop = 130;
+    var myLeft = 130;
+    
+    var angle = 120;
+    angle %= 360;
+    var radius = 110;
+    var radians= (angle/180) * Math.PI;
+    var x = myLeft + Math.cos(radians) * radius;
+    var y = myTop + Math.sin(radians) * radius;
+
+    class GaugemeterElement extends Polymer.Element {
+      static get is() { return 'gaugemeter-element'; }
+      static get properties() {
+        return {
+          radius: {
+            type: Number,
+            value: 120  
+          },
+          baseArcStrokeWidth: {
+            type: Number,
+            value: 5  
+          },
+          baseArcStrokeColor: {
+            type: String,
+            value: '#EEE'
+          },
+          meterArcStrokeWidth: {
+            type: Number,
+            value: 5  
+          },
+          meterArcStrokeColor: {
+            type: String,
+            value: '#C00'
+          },
+          dotRadius: {
+            type: Number,
+            value: 10
+          },
+          dotColor: {
+            type: String,
+            value: '#C00'
+          },
+          meterValue: {
+            type: Number,
+            value: 0,
+            reflectToAttribute: true,
+            observer: '_onMeterUpdate'
+          }
+        };
+      };
+
+      ready() {
+        super.ready();
+        
+        this.render();
+      };
+
+      render(){
+        console.log(className + ': render');
+        var _width = (this.radius + this.baseArcStrokeWidth)*2 + Math.max(0, this.dotRadius-this.baseArcStrokeWidth);
+
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('version', '1.1');
+        svg.setAttribute('width', _width);
+        svg.setAttribute('height', _width);
+        svg.setAttribute('viewBox', '0 0 ' + _width + ' ' + _width);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid');
+        
+        /*
+        <circle id="base" cx = "130" cy = "130" r = "110" fill="none" stroke="#EEE"  stroke-width="5"/>
+      <path id="arc" d="M130,130 " fill="none" stroke="red" stroke-linecap="round" stroke-width="5" />
+      <circle id="dot" cx = "0" cy = "0" r = "10" fill="crimson" stroke="none"/>
+      */
+        var baseArc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        baseArc.setAttribute("id", "base");
+        baseArc.setAttribute("fill", "none");
+        baseArc.setAttribute("stroke", this.baseArcStrokeColor);
+        baseArc.setAttribute("stroke-width", this.baseArcStrokeWidth);
+        baseArc.setAttribute("cx", _width/2);
+        baseArc.setAttribute("cy", _width/2);
+        var r = this.radius - this.baseArcStrokeWidth;
+        baseArc.setAttribute("r", r);
+        svg.appendChild(baseArc);
+
+        var meterArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        meterArc.setAttribute("id", "arc");
+        meterArc.setAttribute("d", "M" + _width/2 + ',' + _width/2);
+        meterArc.setAttribute("stroke", this.meterArcStrokeColor);
+        meterArc.setAttribute("stroke-width", this.meterArcStrokeWidth);
+        svg.appendChild(meterArc);
+
+        var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("id", "dot");
+        dot.setAttribute("fill", this.dotColor);
+        dot.setAttribute("cx", _width/2);
+        dot.setAttribute("cy", _width/2);
+        dot.setAttribute('r', this.dotRadius);
+        svg.appendChild(dot);
+        
+        Polymer.dom(this.root).appendChild(svg);
+
+        var dot = Polymer.dom(this.root).querySelector('#dot');
+        var arc = Polymer.dom(this.root).querySelector("#arc");
+
+        dot.setAttribute("cx", x);
+        dot.setAttribute("cy", y);
+      };
+
+      _onMeterUpdate(newValue, oldValue){
+        //TODO
+
+      }
+    }
+
+    window.customElements.define(GaugemeterElement.is, GaugemeterElement);
+  </script>
+</dom-module>
