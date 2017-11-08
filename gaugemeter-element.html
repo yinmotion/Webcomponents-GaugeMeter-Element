@@ -20,10 +20,14 @@
      */
 
     const className = "GaugemeterElement";
+
+    var _width = 0;
+    var _centerX;
+    var _centerY;
     
-    var minAngle = 135;
-    var maxAngle = 275;
-    
+    var angleRange = 275;
+    var minAngle = (360 - angleRange) / 2 + 90;
+
     var angle = minAngle;
 
     var radians = 0;
@@ -33,6 +37,8 @@
     var baseArc;
     var meterArc;
     var dot;
+
+    var radiusDot = 0;
 
     class GaugemeterElement extends Polymer.Element {
       static get is() { return 'gaugemeter-element'; }
@@ -52,7 +58,7 @@
           },
           meterArcStrokeWidth: {
             type: Number,
-            value: 5
+            value: 6
           },
           meterArcStrokeColor: {
             type: String,
@@ -69,8 +75,7 @@
           meterValue: {
             type: Number,
             value: 0,
-            reflectToAttribute: true,
-            observer: '_onMeterUpdate'
+            reflectToAttribute: true
           }
         };
       };
@@ -87,11 +92,11 @@
       render() {
         console.log(className + ': render');
         //Caculate the full width of the component
-        var _width = (this.radius + this.baseArcStrokeWidth) * 2 + Math.max(0, this.dotRadius - this.baseArcStrokeWidth);
+        _width = (this.radius + this.baseArcStrokeWidth) * 2 + Math.max(0, this.dotRadius - this.baseArcStrokeWidth);
+        _centerX = _width/2;
+        _centerY = _width/2;
 
-        var radiusDot = this.radius - this.baseArcStrokeWidth;
-        dotX = _width / 2 + Math.cos(radians) * radiusDot;
-        dotY = _width / 2 + Math.sin(radians) * radiusDot;
+        radiusDot = this.radius - this.baseArcStrokeWidth;
 
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('version', '1.1');
@@ -105,24 +110,26 @@
         baseArcSVG.setAttribute("fill", "none");
         baseArcSVG.setAttribute("stroke", this.baseArcStrokeColor);
         baseArcSVG.setAttribute("stroke-width", this.baseArcStrokeWidth);
-        baseArcSVG.setAttribute("cx", _width / 2);
-        baseArcSVG.setAttribute("cy", _width / 2);
+        baseArcSVG.setAttribute("cx", _centerX);
+        baseArcSVG.setAttribute("cy", _centerY);
         var r = this.radius - this.baseArcStrokeWidth;
         baseArcSVG.setAttribute("r", r);
         svg.appendChild(baseArcSVG);
 
         var meterArcSVG = document.createElementNS("http://www.w3.org/2000/svg", "path");
         meterArcSVG.setAttribute("id", "arc");
-        meterArcSVG.setAttribute("d", "M" + _width / 2 + ',' + _width / 2);
+        meterArcSVG.setAttribute("fill", "none");
+        //meterArcSVG.setAttribute("d", "M" + _width / 2 + ',' + _width / 2);
         meterArcSVG.setAttribute("stroke", this.meterArcStrokeColor);
         meterArcSVG.setAttribute("stroke-width", this.meterArcStrokeWidth);
+        meterArcSVG.setAttribute('stroke-linecap', 'round');
         svg.appendChild(meterArcSVG);
 
         var dotSVG = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         dotSVG.setAttribute("id", "dot");
         dotSVG.setAttribute("fill", this.dotColor);
-        dotSVG.setAttribute("cx", _width / 2);
-        dotSVG.setAttribute("cy", _width / 2);
+        dotSVG.setAttribute("cx", _centerX);
+        dotSVG.setAttribute("cy", _centerY);
         dotSVG.setAttribute('r', this.dotRadius);
         svg.appendChild(dotSVG);
 
@@ -130,17 +137,66 @@
         this.shadowRoot.appendChild(svg);
 
         dot = this.shadowRoot.querySelector('#dot');
-        baseArc = this.shadowRoot.querySelector("#arc");
+        baseArc = this.shadowRoot.querySelector("#base");
+        meterArc = this.shadowRoot.querySelector("#arc");
 
-        dot.setAttribute("cx", dotX);
-        dot.setAttribute("cy", dotY);
+        var objAngle = { '_angle': angle };
+        this._drawMeter(objAngle, true);
+
+        //Add observer to the meter value property
+        this._createPropertyObserver('meterValue', '_onMeterUpdate', true);
+        //Set init meter value
+        this._onMeterUpdate(this.meterValue, 0);
       };
 
       _onMeterUpdate(newValue, oldValue) {
-        //TODO
+        var destAngle = minAngle + newValue / 100 * angleRange;
 
-      }
-    }
+        console.log(className + " : destAngle " + destAngle);
+        var objAngle = { '_angle': angle };
+        var tween = TweenLite.to(objAngle, 1, { _angle: destAngle, ease: Quad.easeOut, onUpdate: this._drawMeter, onUpdateParams: [objAngle], onUpdateScope: this });
+      };
+
+      _polarToCartesian(radius, angleInDegrees) {
+        var angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+
+        return {
+          x: _centerX + (radius * Math.cos(angleInRadians)),
+          y: _centerY + (radius * Math.sin(angleInRadians))
+        };
+      };
+
+      _describeArc(radius, startAngle, endAngle) {
+        var start = this._polarToCartesian(radius, endAngle);
+        var end = this._polarToCartesian(radius, startAngle);
+
+        var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+        var d = [
+          "M", start.x, start.y,
+          "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+        ].join(" ");
+
+        return d;
+      };
+
+      _drawMeter(newAngle, init) {
+        //console.log("_drawMeter = "+ newAngle._angle);
+
+        angle = newAngle._angle;
+        radians = (angle / 180) * Math.PI;
+        dotX = _centerX + Math.cos(radians) * radiusDot;
+        dotY = _centerY + Math.sin(radians) * radiusDot;
+
+        dot.setAttribute("cx", dotX);
+        dot.setAttribute("cy", dotY);
+
+        var d = this._describeArc(this.radius - this.baseArcStrokeWidth, minAngle + 90, angle + 90);
+        meterArc.setAttribute("d", d);
+      };
+
+    };
+
 
     window.customElements.define(GaugemeterElement.is, GaugemeterElement);
   </script>

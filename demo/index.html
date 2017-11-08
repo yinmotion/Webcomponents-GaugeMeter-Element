@@ -6,25 +6,38 @@
 
     <title>gaugemeter-element demo</title>
 
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    
+    <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
 
-    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
-    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../bower_components/paper-slider/paper-slider.html">  
+    <link rel="import" href="../bower_components/iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../bower_components/iron-demo-helpers/demo-snippet.html">
     <link rel="import" href="../gaugemeter-element.html">
 
     <custom-style>
-      <style is="custom-style" include="demo-pages-shared-styles">
-      </style>
+      <style is="custom-style" include="demo-pages-shared-styles"></style>
     </custom-style>
+    
+    <script>
+      window.addEventListener('WebComponentsReady', function() {
+        var gaugemeter = document.querySelector('#gaugeMeter');
+        var slider = document.querySelector('#slider');
+        slider.addEventListener('value-change', function() {
+          gaugemeter.meterValue = slider.value;
+        });
+      });
+    </script>
   </head>
   <body>
     <div class="vertical-section-container centered">
       <h3>gaugemeter-element demo</h3>
       <demo-snippet>
         <template>
-          <gaugemeter-element radius=120 dot-color='#0CC' base-arc-stroke-width=5></gaugemeter-element>
+          <gaugemeter-element id='gaugeMeter' radius=120 dot-color='#0CC' base-arc-stroke-width=5 meter-arc-stroke-color='#CC0' meter-value=30></gaugemeter-element>
         </template>
+        
       </demo-snippet>
     </div>
+    <div class style='width: 250px'><paper-slider id='slider' value="30"></paper-slider></div>
   </body>
 </html>
