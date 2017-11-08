@@ -8,12 +8,6 @@
         display: block;
       }
     </style>
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"
-    viewBox='0 0 300 300' preserveAspectRatio="xMidYMid" style="width:300px; height:300px">
-      <circle id="base" cx = "130" cy = "130" r = "110" fill="none" stroke="#EEE"  stroke-width="5"/>
-      <path id="arc" d="M130,130 " fill="none" stroke="red" stroke-linecap="round" stroke-width="5" />
-      <circle id="dot" cx = "0" cy = "0" r = "10" fill="crimson" stroke="none"/>
-    </svg>
   </template>
   <script>
     /**
@@ -24,17 +18,21 @@
      * @polymer
      * @demo demo/index.html
      */
-    //"0 0 300 300" 
+
     const className = "GaugemeterElement";
-    var myTop = 130;
-    var myLeft = 130;
     
-    var angle = 120;
-    angle %= 360;
-    var radius = 110;
-    var radians= (angle/180) * Math.PI;
-    var x = myLeft + Math.cos(radians) * radius;
-    var y = myTop + Math.sin(radians) * radius;
+    var minAngle = 135;
+    var maxAngle = 275;
+    
+    var angle = minAngle;
+
+    var radians = 0;
+    var dotX = 0;
+    var dotY = 0;
+
+    var baseArc;
+    var meterArc;
+    var dot;
 
     class GaugemeterElement extends Polymer.Element {
       static get is() { return 'gaugemeter-element'; }
@@ -42,11 +40,11 @@
         return {
           radius: {
             type: Number,
-            value: 120  
+            value: 120
           },
           baseArcStrokeWidth: {
             type: Number,
-            value: 5  
+            value: 5
           },
           baseArcStrokeColor: {
             type: String,
@@ -54,7 +52,7 @@
           },
           meterArcStrokeWidth: {
             type: Number,
-            value: 5  
+            value: 5
           },
           meterArcStrokeColor: {
             type: String,
@@ -79,13 +77,21 @@
 
       ready() {
         super.ready();
-        
+        angle = minAngle;
+        angle %= 360;
+        radians = (angle / 180) * Math.PI;
+
         this.render();
       };
 
-      render(){
+      render() {
         console.log(className + ': render');
-        var _width = (this.radius + this.baseArcStrokeWidth)*2 + Math.max(0, this.dotRadius-this.baseArcStrokeWidth);
+        //Caculate the full width of the component
+        var _width = (this.radius + this.baseArcStrokeWidth) * 2 + Math.max(0, this.dotRadius - this.baseArcStrokeWidth);
+
+        var radiusDot = this.radius - this.baseArcStrokeWidth;
+        dotX = _width / 2 + Math.cos(radians) * radiusDot;
+        dotY = _width / 2 + Math.sin(radians) * radiusDot;
 
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('version', '1.1');
@@ -93,48 +99,44 @@
         svg.setAttribute('height', _width);
         svg.setAttribute('viewBox', '0 0 ' + _width + ' ' + _width);
         svg.setAttribute('preserveAspectRatio', 'xMidYMid');
-        
-        /*
-        <circle id="base" cx = "130" cy = "130" r = "110" fill="none" stroke="#EEE"  stroke-width="5"/>
-      <path id="arc" d="M130,130 " fill="none" stroke="red" stroke-linecap="round" stroke-width="5" />
-      <circle id="dot" cx = "0" cy = "0" r = "10" fill="crimson" stroke="none"/>
-      */
-        var baseArc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        baseArc.setAttribute("id", "base");
-        baseArc.setAttribute("fill", "none");
-        baseArc.setAttribute("stroke", this.baseArcStrokeColor);
-        baseArc.setAttribute("stroke-width", this.baseArcStrokeWidth);
-        baseArc.setAttribute("cx", _width/2);
-        baseArc.setAttribute("cy", _width/2);
+
+        var baseArcSVG = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        baseArcSVG.setAttribute("id", "base");
+        baseArcSVG.setAttribute("fill", "none");
+        baseArcSVG.setAttribute("stroke", this.baseArcStrokeColor);
+        baseArcSVG.setAttribute("stroke-width", this.baseArcStrokeWidth);
+        baseArcSVG.setAttribute("cx", _width / 2);
+        baseArcSVG.setAttribute("cy", _width / 2);
         var r = this.radius - this.baseArcStrokeWidth;
-        baseArc.setAttribute("r", r);
-        svg.appendChild(baseArc);
+        baseArcSVG.setAttribute("r", r);
+        svg.appendChild(baseArcSVG);
 
-        var meterArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        meterArc.setAttribute("id", "arc");
-        meterArc.setAttribute("d", "M" + _width/2 + ',' + _width/2);
-        meterArc.setAttribute("stroke", this.meterArcStrokeColor);
-        meterArc.setAttribute("stroke-width", this.meterArcStrokeWidth);
-        svg.appendChild(meterArc);
+        var meterArcSVG = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        meterArcSVG.setAttribute("id", "arc");
+        meterArcSVG.setAttribute("d", "M" + _width / 2 + ',' + _width / 2);
+        meterArcSVG.setAttribute("stroke", this.meterArcStrokeColor);
+        meterArcSVG.setAttribute("stroke-width", this.meterArcStrokeWidth);
+        svg.appendChild(meterArcSVG);
 
-        var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        dot.setAttribute("id", "dot");
-        dot.setAttribute("fill", this.dotColor);
-        dot.setAttribute("cx", _width/2);
-        dot.setAttribute("cy", _width/2);
-        dot.setAttribute('r', this.dotRadius);
-        svg.appendChild(dot);
-        
-        Polymer.dom(this.root).appendChild(svg);
+        var dotSVG = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dotSVG.setAttribute("id", "dot");
+        dotSVG.setAttribute("fill", this.dotColor);
+        dotSVG.setAttribute("cx", _width / 2);
+        dotSVG.setAttribute("cy", _width / 2);
+        dotSVG.setAttribute('r', this.dotRadius);
+        svg.appendChild(dotSVG);
 
-        var dot = Polymer.dom(this.root).querySelector('#dot');
-        var arc = Polymer.dom(this.root).querySelector("#arc");
+        //Polymer.dom(this.root).appendChild(svg);
+        this.shadowRoot.appendChild(svg);
 
-        dot.setAttribute("cx", x);
-        dot.setAttribute("cy", y);
+        dot = this.shadowRoot.querySelector('#dot');
+        baseArc = this.shadowRoot.querySelector("#arc");
+
+        dot.setAttribute("cx", dotX);
+        dot.setAttribute("cy", dotY);
       };
 
-      _onMeterUpdate(newValue, oldValue){
+      _onMeterUpdate(newValue, oldValue) {
         //TODO
 
       }
