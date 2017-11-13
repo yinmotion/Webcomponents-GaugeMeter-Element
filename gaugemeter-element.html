@@ -7,6 +7,20 @@
       :host {
         display: block;
       }
+      .baseArc {
+        fill: none;
+        stroke: var(--gaugemeter-base-arc-stroke-color, #CCC);
+        stroke-width: var(--gaugemeter-base-arc-stroke-width, 8px);
+      }
+      .meterArc {
+        fill: none;
+        stroke: var(--gaugemeter-meter-arc-stroke-color, #333);
+        stroke-width: var(--gaugemeter-meter-arc-stroke-width, 5px);
+        stroke-linecap: var(--gaugemeter-meter-arc-stroke-linecap, round);
+      }
+      .meterDot {
+        fill: var(--gaugemeter-meter-dot-color, #333);
+      }
     </style>
   </template>
   <script>
@@ -22,8 +36,9 @@
     const className = "GaugemeterElement";
 
     var _width = 0;
-    var _centerX;
-    var _centerY;
+    var _centerX = 0;
+    var _centerY = 0;
+    var _baseArcStrokeWidth = 0;
     
     var angleRange = 275;
     var minAngle = (360 - angleRange) / 2 + 90;
@@ -48,30 +63,12 @@
             type: Number,
             value: 120
           },
-          baseArcStrokeWidth: {
-            type: Number,
-            value: 5
-          },
-          baseArcStrokeColor: {
-            type: String,
-            value: '#EEE'
-          },
-          meterArcStrokeWidth: {
-            type: Number,
-            value: 6
-          },
-          meterArcStrokeColor: {
-            type: String,
-            value: '#C00'
-          },
+
           dotRadius: {
             type: Number,
             value: 10
           },
-          dotColor: {
-            type: String,
-            value: '#C00'
-          },
+          
           meterValue: {
             type: Number,
             value: 0,
@@ -85,6 +82,20 @@
         angle = minAngle;
         angle %= 360;
         radians = (angle / 180) * Math.PI;
+        console.log(className + " : ready");
+      };
+
+      connectedCallback () {
+        super.connectedCallback ();
+        console.log(className + " : connectedCallback");
+
+        /** Get the computed CSS variable value set by the index.html **/ 
+        _baseArcStrokeWidth = parseInt(getComputedStyle(this).getPropertyValue("--gaugemeter-base-arc-stroke-width"), 10);
+       
+        _width = (this.radius + _baseArcStrokeWidth) * 2 + Math.max(0, this.dotRadius - _baseArcStrokeWidth);
+        _centerX = _width/2;
+        _centerY = _width/2;
+        radiusDot = this.radius - _baseArcStrokeWidth;
 
         this.render();
       };
@@ -92,12 +103,7 @@
       render() {
         console.log(className + ': render');
         //Caculate the full width of the component
-        _width = (this.radius + this.baseArcStrokeWidth) * 2 + Math.max(0, this.dotRadius - this.baseArcStrokeWidth);
-        _centerX = _width/2;
-        _centerY = _width/2;
-
-        radiusDot = this.radius - this.baseArcStrokeWidth;
-
+      
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('version', '1.1');
         svg.setAttribute('width', _width);
@@ -107,33 +113,29 @@
 
         var baseArcSVG = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         baseArcSVG.setAttribute("id", "base");
-        baseArcSVG.setAttribute("fill", "none");
-        baseArcSVG.setAttribute("stroke", this.baseArcStrokeColor);
-        baseArcSVG.setAttribute("stroke-width", this.baseArcStrokeWidth);
+        baseArcSVG.setAttribute("class", "baseArc");
         baseArcSVG.setAttribute("cx", _centerX);
         baseArcSVG.setAttribute("cy", _centerY);
-        var r = this.radius - this.baseArcStrokeWidth;
+        var r = this.radius - _baseArcStrokeWidth;
         baseArcSVG.setAttribute("r", r);
         svg.appendChild(baseArcSVG);
 
         var meterArcSVG = document.createElementNS("http://www.w3.org/2000/svg", "path");
         meterArcSVG.setAttribute("id", "arc");
-        meterArcSVG.setAttribute("fill", "none");
-        //meterArcSVG.setAttribute("d", "M" + _width / 2 + ',' + _width / 2);
-        meterArcSVG.setAttribute("stroke", this.meterArcStrokeColor);
-        meterArcSVG.setAttribute("stroke-width", this.meterArcStrokeWidth);
-        meterArcSVG.setAttribute('stroke-linecap', 'round');
+        meterArcSVG.setAttribute("class", "meterArc");
         svg.appendChild(meterArcSVG);
 
         var dotSVG = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         dotSVG.setAttribute("id", "dot");
-        dotSVG.setAttribute("fill", this.dotColor);
+        dotSVG.setAttribute("class", "meterDot");
         dotSVG.setAttribute("cx", _centerX);
         dotSVG.setAttribute("cy", _centerY);
         dotSVG.setAttribute('r', this.dotRadius);
         svg.appendChild(dotSVG);
 
+        //Long form:
         //Polymer.dom(this.root).appendChild(svg);
+        //Shorthand:
         this.shadowRoot.appendChild(svg);
 
         dot = this.shadowRoot.querySelector('#dot');
@@ -191,7 +193,7 @@
         dot.setAttribute("cx", dotX);
         dot.setAttribute("cy", dotY);
 
-        var d = this._describeArc(this.radius - this.baseArcStrokeWidth, minAngle + 90, angle + 90);
+        var d = this._describeArc(this.radius - _baseArcStrokeWidth, minAngle + 90, angle + 90);
         meterArc.setAttribute("d", d);
       };
 

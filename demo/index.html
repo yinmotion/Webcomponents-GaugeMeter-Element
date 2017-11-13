@@ -1,44 +1,60 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>gaugemeter-element demo</title>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    
-    <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <title>gaugemeter-element demo</title>
 
-    <link rel="import" href="../bower_components/paper-slider/paper-slider.html">  
-    <link rel="import" href="../bower_components/iron-demo-helpers/demo-pages-shared-styles.html">
-    <link rel="import" href="../bower_components/iron-demo-helpers/demo-snippet.html">
-    <link rel="import" href="../gaugemeter-element.html">
 
-    <custom-style>
-      <style is="custom-style" include="demo-pages-shared-styles"></style>
-    </custom-style>
-    
-    <script>
-      window.addEventListener('WebComponentsReady', function() {
-        var gaugemeter = document.querySelector('#gaugeMeter');
-        var slider = document.querySelector('#slider');
-        slider.addEventListener('value-change', function() {
-          gaugemeter.meterValue = slider.value;
-        });
+  <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+
+  <link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+  <link rel="import" href="../bower_components/iron-demo-helpers/demo-pages-shared-styles.html">
+  <link rel="import" href="../bower_components/iron-demo-helpers/demo-snippet.html">
+  <link rel="import" href="../gaugemeter-element.html">
+
+  <custom-style>
+    <style is="custom-style" include="demo-pages-shared-styles"></style>
+  </custom-style>
+  <script>
+    window.addEventListener('WebComponentsReady', function () {
+      var gaugemeter = document.querySelector('#gaugeMeter');
+      var slider = document.querySelector('#slider');
+      slider.addEventListener('value-change', function () {
+        gaugemeter.meterValue = slider.value;
       });
-    </script>
-  </head>
-  <body>
-    <div class="vertical-section-container centered">
-      <h3>gaugemeter-element demo</h3>
-      <demo-snippet>
-        <template>
-          <gaugemeter-element id='gaugeMeter' radius=120 dot-color='#0CC' base-arc-stroke-width=5 meter-arc-stroke-color='#CC0' meter-value=30></gaugemeter-element>
-        </template>
-        
-      </demo-snippet>
-      <div class style='width: 250px'><paper-slider id='slider' value="30"></paper-slider></div>
+    });
+  </script>
+</head>
+
+<body>
+  <div class="vertical-section-container centered">
+    <h3>gaugemeter-element demo</h3>
+    <demo-snippet>
+      <template>
+        <style>
+          :root {
+            --gaugemeter-base-arc-stroke-color: #EEE;
+            --gaugemeter-base-arc-stroke-width: 10px;
+
+            --gaugemeter-meter-arc-stroke-color: #CC0;
+            --gaugemeter-meter-arc-stroke-width: 6px;
+            --gaugemeter-meter-arc-stroke-linecap: round;
+
+            --gaugemeter-meter-dot-color: #C00;
+          }
+        </style>
+        <gaugemeter-element id='gaugeMeter' meter-value=30 radius=100 dot-radius=10></gaugemeter-element>
+
+      </template>
+    </demo-snippet>
+    <div class style='width: 250px'>
+      <paper-slider id='slider' value="30"></paper-slider>
     </div>
-    
-  </body>
+  </div>
+
+</body>
+
 </html>
